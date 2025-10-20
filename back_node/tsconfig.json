@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    /* Language & env */
+    "target": "esnext",
+    "lib": ["esnext"],
+
+    /* Modules */
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+    },
+
+    /* Interop */
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+
+    /* Types */
+    "types": ["node"],
+
+    /* Type checking */
+    "strict": true,
+    "skipLibCheck": true,
+
+    /* Build perf */
+    "incremental": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
