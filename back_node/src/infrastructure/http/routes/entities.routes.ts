@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { EntitiesHandler } from '@/infrastructure/http/handlers/entities.handler';
 
-export function useEntitiesRouter() {
+export default function useEntitiesRouter() {
   const router = Router();
   const entitiesHandler = new EntitiesHandler();
 
@@ -12,4 +12,6 @@ export function useEntitiesRouter() {
   router.post('/queue/mutate', entitiesHandler.queueMutate);
 
   router.post('/reset', entitiesHandler.reset);
+
+  return router;
 }
