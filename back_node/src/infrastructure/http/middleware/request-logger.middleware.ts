@@ -12,10 +12,17 @@ declare module 'express-serve-static-core' {
   }
 }
 
-enum RequestLogLevelEnum {
+export enum RequestLogLevelEnum {
   info = 'info',
   warn = 'warn',
   error = 'error',
+}
+
+export interface LogRecord {
+  line: string;
+  level: RequestLogLevelEnum;
+  error?: unknown;
+  timestamp?: Date;
 }
 
 function chooseLogLevel(status: number): RequestLogLevelEnum {
@@ -28,7 +35,10 @@ function pad2(n: number): string {
   return n < 10 ? `0${n}` : `${n}`;
 }
 
-export async function writeLogLine(line: string, now: Date = new Date()): Promise<void> {
+export async function writeLogLine(record: LogRecord): Promise<void> {
+  const { line, level, error, timestamp } = record;
+
+  const now = timestamp || new Date();
   const yyyy = String(now.getFullYear());
   const mm = pad2(now.getMonth() + 1);
   const dd = pad2(now.getDate());
@@ -36,8 +46,33 @@ export async function writeLogLine(line: string, now: Date = new Date()): Promis
   const dir = path.join(process.cwd(), 'logs', yyyy, mm);
   const filePath = path.join(dir, `${dd}.log`);
 
-  await fs.mkdir(dir, { recursive: true });
-  await fs.appendFile(filePath, line + '\n', { encoding: 'utf8' });
+  let enrichedLine = `${now.toISOString()} ${level.toUpperCase()} ${line}`;
+
+  if ((level === RequestLogLevelEnum.warn || level === RequestLogLevelEnum.error) && typeof error !== 'undefined') {
+    if (error instanceof Error) {
+      enrichedLine += ` | ${error.name}: ${error.message}`;
+      if (error.stack) {
+        enrichedLine += `\nStack: ${error.stack}`;
+      }
+    } else {
+      try {
+        enrichedLine += ` | error: ${JSON.stringify(error)}`;
+      } catch {
+        enrichedLine += ' | error: [unserializable]';
+      }
+    }
+  }
+
+  try {
+    await fs.mkdir(dir, { recursive: true });
+    await fs.appendFile(filePath, enrichedLine + '\n', { encoding: 'utf8' });
+  } catch (fsErr: unknown) {
+    const msg =
+      fsErr instanceof Error
+        ? `[writeLogLine] Failed to write "${filePath}" — ${fsErr.name}: ${fsErr.message}\n${fsErr.stack ?? ''}`
+        : `[writeLogLine] Failed to write "${filePath}" — unknown error: ${String(fsErr)}`;
+    console.error(msg);
+  }
 }
 
 export const requestLogger: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
@@ -64,7 +99,10 @@ export const requestLogger: RequestHandler = (req: Request, res: Response, next:
       `${status} ${durationMs.toFixed(1)}ms ` +
       `(ip=${ip || '-'}, ua="${userAgent.replace(/"/g, "'")}")`;
 
-    void writeLogLine(`${new Date().toISOString()} ${level.toUpperCase()} ${logLine}`).catch((err: unknown) => {
+    void writeLogLine({
+      line: `${new Date().toISOString()} ${level.toUpperCase()} ${logLine}`,
+      level,
+    }).catch((err: unknown) => {
       console.error('Failed to write log line:', err);
     });
   });
