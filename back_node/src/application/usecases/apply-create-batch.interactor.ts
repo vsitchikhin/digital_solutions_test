@@ -5,7 +5,7 @@ import { type ItemId } from '@/application/types/primitives';
 export type ApplyCreateBatchResult = {
   accepted: ItemId[];
   rejected: Array<{ id: ItemId; reason: string }>;
-}
+} | { empty: true };
 
 export class ApplyCreateBatchInteractor {
   constructor(
@@ -14,6 +14,10 @@ export class ApplyCreateBatchInteractor {
   ) {}
 
   execute(): ApplyCreateBatchResult {
-    return { accepted: [], rejected: [] };
+    const batch = this.buffer.flush();
+    if (!batch.ids.length) return { empty: true };
+
+    const { accepted, rejected } = this.universeRepo.add(batch.ids);
+    return { accepted, rejected };
   }
 }
