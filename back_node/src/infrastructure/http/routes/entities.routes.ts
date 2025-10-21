@@ -1,9 +1,8 @@
 import { Router } from 'express';
-import { EntitiesHandler } from '@/infrastructure/http/handlers/entities.handler';
+import { type EntitiesHandler } from '@/infrastructure/http/handlers/entities.handler';
 
-export default function useEntitiesRouter() {
+export default function useEntitiesRouter(entitiesHandler: EntitiesHandler) {
   const router = Router();
-  const entitiesHandler = new EntitiesHandler();
 
   router.get('/list', entitiesHandler.getList);
   router.get('/selected', entitiesHandler.getSelected);
