@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  back:
+    build:
+      context: ./back_node
+      dockerfile: Dockerfile
+    image: digital_solutions-back:latest
+    container_name: digital_solutions-back
+    environment:
+      PORT: "4000"
+      NODE_ENV: "dev"
+      TZ: "Europe/Amsterdam"
+
+      DEFAULT_ENTITIES_LIMIT: "20"
+      MAX_ENTITIES_LIMIT: "100"
+      UNIVERSE_MAX_ID: "1000000"
+
+      HEADER_REQUEST_ID: "x-request-id"
+      HEADER_CORRELATION_ID: "x-correlation-id"
+
+      ADD_ELEMENTS_SCHEDULE: "10000"
+      UPDATE_ELEMENTS_SCHEDULE: "1000"
+
+      CHUNK_SIZE: "10000"
+
+    ports:
+      - "4000:4000"
+
+    volumes:
+      - ./back_node/logs:/app/logs
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+    restart: unless-stopped

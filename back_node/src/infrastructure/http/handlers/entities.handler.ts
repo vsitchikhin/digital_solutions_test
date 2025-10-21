@@ -30,7 +30,7 @@ export class EntitiesHandler {
     private readonly resetUC: ResetSelectionsInteractor,
   ) {}
 
-  getList(req: Request, res: Response): void {
+  getList = (req: Request, res: Response): void => {
     try {
       const dto: GetEntitiesListRequest = {
         cursor: this.parseOptionalNumber(req.query.cursor, 'cursor'),
@@ -43,14 +43,15 @@ export class EntitiesHandler {
       const result = this.getListUC.execute(dto);
       res.json(result);
     } catch (err: unknown) {
-      throw this.asInternalServerError(err, {
+      const error = this.asInternalServerError(err, {
         route: '/api/entities/list',
         query: req.query,
       });
+      throw error;
     }
-  }
+  };
 
-  getSelected(req: Request, res: Response): void {
+  getSelected = (req: Request, res: Response): void => {
     try {
       const dto: GetSelectedEntitiesRequest = {
         cursor: this.parseOptionalNumber(req.query.cursor, 'cursor'),
@@ -63,14 +64,15 @@ export class EntitiesHandler {
       const result = this.getSelectedUC.execute(dto);
       res.json(result);
     } catch (err: unknown) {
-      throw this.asInternalServerError(err, {
+      const error = this.asInternalServerError(err, {
         route: '/api/entities/selected',
         query: req.query,
       });
+      throw error;
     }
-  }
+  };
 
-  queueCreate(req: Request, res: Response): void {
+  queueCreate = (req: Request, res: Response): void => {
     try {
       const body = req.body as QueueAddItemsRequest;
 
@@ -87,14 +89,15 @@ export class EntitiesHandler {
       const result: QueueAddItemsEnqueueResponse = this.queueAddUC.execute(body);
       res.json(result);
     } catch (err: unknown) {
-      throw this.asInternalServerError(err, {
+      const error = this.asInternalServerError(err, {
         route: '/api/entities/queue/create',
         body: req.body,
       });
+      throw error;
     }
-  }
+  };
 
-  queueMutate(req: Request, res: Response): void {
+  queueMutate = (req: Request, res: Response): void => {
     try {
       const body = req.body as QueueMutationsRequest;
 
@@ -136,24 +139,25 @@ export class EntitiesHandler {
       const result: QueueMutationsResponse = this.queueMutationsUC.execute(body);
       res.json(result);
     } catch (err: unknown) {
-      throw this.asInternalServerError(err, {
+      const error = this.asInternalServerError(err, {
         route: '/api/entities/queue/mutate',
         body: req.body,
       });
+      throw error;
     }
-  }
+  };
 
-  reset(_req: Request, res: Response): void {
+  reset = (_req: Request, res: Response): void => {
     try {
       const result = this.resetUC.execute();
       res.json(result);
     } catch(err: unknown) {
-      throw new InternalServerError('Reset failed', {
+      const error = this.asInternalServerError(err, {
         route: '/api/entities/reset',
-        error: err instanceof Error ? { name: err.name, message: err.message } : String(err),
       });
+      throw error;
     }
-  }
+  };
 
   private parseOptionalNumber(value: unknown, fieldName: string): number | undefined {
     if (value == null || value === '') return undefined;

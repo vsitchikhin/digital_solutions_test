@@ -1,33 +1,30 @@
 {
   "compilerOptions": {
-    /* Language & env */
-    "target": "esnext",
-    "lib": ["esnext"],
+    "target": "ES2022",
+    "lib": ["ES2022"],
 
-    /* Modules */
     "module": "CommonJS",
     "moduleResolution": "node",
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "baseUrl": "./src",
+
+    "rootDir": "src",
+    "outDir": "dist",
+
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["src/*"]
     },
 
-    /* Interop */
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
 
-    /* Types */
     "types": ["node"],
 
-    /* Type checking */
     "strict": true,
     "skipLibCheck": true,
 
-    /* Build perf */
-    "incremental": true
+    "sourceMap": true,
+    "noEmitOnError": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]

@@ -26,3 +26,50 @@
 
 ## Реализация
 1. Для упрощения сборки фронта и бэка - реализую оба сервиса в одном репозитории. Такой подход избрал только для сокращения времени на разработку, чтобы не прыгать по разным репозиториям и директориям.
+
+### Запуск сервера
+`cd back_node`
+
+Если необходимо запустить отдельно сервер на машине
+1. Выполняем `npm i`
+2. Добавляем в `.env` следующие переменные:
+    ```
+    PORT=4000
+    
+    DEFAULT_ENTITIES_LIMIT=20
+    MAX_ENTITIES_LIMIT=100
+    UNIVERSE_MAX_ID=1000000
+    
+    NODE_ENV='dev'
+    
+    HEADER_REQUEST_ID='x-request-id'
+    HEADER_CORRELATION_ID='x-correlation-id'
+    
+    ADD_ELEMENTS_SCHEDULE=10000
+    UPDATE_ELEMENTS_SCHEDULE=1000
+    
+    CHUNK_SIZE=10000
+    ```
+3. Если необходимо запустить в dev режиме: `npm run dev`
+4. Если необходимо запустить в прод режиме: `npm run build` -> `npm run start`
+
+Также можно запустить через докер.
+```
+cd ../ # возвращаемся в корень всего проекта
+
+docker compose build back # билдим образ бэка
+docker compose up -d back # поднимаем контейнер с бэком
+
+docker compose down # останавливаем приложение
+docker compose down -v --rmi all --remove-orphans # полная очистка
+```
+
+Можно запустить и сразу все
+```
+# подразумевается, что находимся в корневой директории всего проекта
+docker compose build
+docker compose up -d
+
+# можно также собрать и поднять с помощью одной команды:
+docker compose up --build
+```

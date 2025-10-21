@@ -22,6 +22,8 @@ import { ApplyCreateBatchInteractor } from '@/application/usecases/apply-create-
 import { ApplyMutationBatchInteractor } from '@/application/usecases/apply-mutation-batch.interactor';
 import { SelectionOrderService } from '@/domain/selection/selection-order.service';
 import { ResetSelectionsInteractor } from '@/application/usecases/reset-selections.interactor';
+import useHealthRouter from '@/infrastructure/http/routes/health.routes';
+import { HealthHandler } from '@/infrastructure/http/handlers/health.handler';
 
 export default async function bootstrap(): Promise<void> {
   try {
@@ -55,6 +57,8 @@ export default async function bootstrap(): Promise<void> {
       queueMutationsUC,
       resetUC,
     );
+
+    const healthHandler = new HealthHandler();
 
     const createTask = scheduler.every(Number(process.env.ADD_ELEMENTS_SCHEDULE) || 10_000, () => {
       try {
@@ -100,6 +104,7 @@ export default async function bootstrap(): Promise<void> {
     app.use(requestLogger);
 
     app.use('/api/entities', useEntitiesRouter(entitiesHandler));
+    app.use('/health', useHealthRouter(healthHandler));
     app.use(errorHandler);
 
     function shutdown(): void {
@@ -123,7 +128,7 @@ export default async function bootstrap(): Promise<void> {
     });
   } catch(err: unknown) {
     console.error('[bootstrap] Failed to start application:', err);
-    writeLogLine({
+    void writeLogLine({
       level: RequestLogLevelEnum.error,
       line: '[bootstrap] Failed to start application:',
       error: err,
