@@ -17,6 +17,7 @@ import {
   BadRequestError,
   InternalServerError,
 } from '@/infrastructure/http/errors/http.errors';
+import { type ResetSelectionsInteractor } from '@/application/usecases/reset-selections.interactor';
 
 export class EntitiesHandler {
   private MAX_LIMIT = Number(process.env.MAX_ENTITIES_LIMIT) || 100;
@@ -26,6 +27,7 @@ export class EntitiesHandler {
     private readonly getSelectedUC: GetSelectedEntitiesInteractor,
     private readonly queueAddUC: QueueAddItemsInteractor,
     private readonly queueMutationsUC: QueueMutationsInteractor,
+    private readonly resetUC: ResetSelectionsInteractor,
   ) {}
 
   getList(req: Request, res: Response): void {
@@ -40,8 +42,8 @@ export class EntitiesHandler {
 
       const result = this.getListUC.execute(dto);
       res.json(result);
-    } catch (unknownError: unknown) {
-      throw this.asInternalServerError(unknownError, {
+    } catch (err: unknown) {
+      throw this.asInternalServerError(err, {
         route: '/api/entities/list',
         query: req.query,
       });
@@ -60,8 +62,8 @@ export class EntitiesHandler {
 
       const result = this.getSelectedUC.execute(dto);
       res.json(result);
-    } catch (unknownError: unknown) {
-      throw this.asInternalServerError(unknownError, {
+    } catch (err: unknown) {
+      throw this.asInternalServerError(err, {
         route: '/api/entities/selected',
         query: req.query,
       });
@@ -84,8 +86,8 @@ export class EntitiesHandler {
 
       const result: QueueAddItemsEnqueueResponse = this.queueAddUC.execute(body);
       res.json(result);
-    } catch (unknownError: unknown) {
-      throw this.asInternalServerError(unknownError, {
+    } catch (err: unknown) {
+      throw this.asInternalServerError(err, {
         route: '/api/entities/queue/create',
         body: req.body,
       });
@@ -133,16 +135,24 @@ export class EntitiesHandler {
 
       const result: QueueMutationsResponse = this.queueMutationsUC.execute(body);
       res.json(result);
-    } catch (unknownError: unknown) {
-      throw this.asInternalServerError(unknownError, {
+    } catch (err: unknown) {
+      throw this.asInternalServerError(err, {
         route: '/api/entities/queue/mutate',
         body: req.body,
       });
     }
   }
 
-  reset(_req: Request, _res: Response): void {
-    throw new InternalServerError('Not implemented', { route: '/api/entities/reset' });
+  reset(_req: Request, res: Response): void {
+    try {
+      const result = this.resetUC.execute();
+      res.json(result);
+    } catch(err: unknown) {
+      throw new InternalServerError('Reset failed', {
+        route: '/api/entities/reset',
+        error: err instanceof Error ? { name: err.name, message: err.message } : String(err),
+      });
+    }
   }
 
   private parseOptionalNumber(value: unknown, fieldName: string): number | undefined {

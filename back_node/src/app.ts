@@ -21,6 +21,7 @@ import { IntervalScheduler } from '@/infrastructure/schedulers/interval.schedule
 import { ApplyCreateBatchInteractor } from '@/application/usecases/apply-create-batch.interactor';
 import { ApplyMutationBatchInteractor } from '@/application/usecases/apply-mutation-batch.interactor';
 import { SelectionOrderService } from '@/domain/selection/selection-order.service';
+import { ResetSelectionsInteractor } from '@/application/usecases/reset-selections.interactor';
 
 export default async function bootstrap(): Promise<void> {
   try {
@@ -35,14 +36,10 @@ export default async function bootstrap(): Promise<void> {
     const getListUC = new GetEntitiesListInteractor(selectionRepo, universeRepo);
     const getSelectedUC = new GetSelectedEntitiesInteractor(selectionRepo);
 
-    const queueAddUC = new QueueAddItemsInteractor({
-      enqueue: (_ids) => 'batch-create-not-implemented',
-      flush: () => ({ ids: [] }),
-    });
-    const queueMutationsUC = new QueueMutationsInteractor({
-      enqueue: (_ids) => 'batch-mutation-not-implemented',
-      flush: () => ({ select: [], unselect: [] }),
-    });
+    const queueAddUC = new QueueAddItemsInteractor(createBuffer, universeRepo);
+    const queueMutationsUC = new QueueMutationsInteractor(mutationBuffer);
+
+    const resetUC = new ResetSelectionsInteractor(selectionRepo);
 
     const selectionOrderService = new SelectionOrderService();
 
@@ -56,6 +53,7 @@ export default async function bootstrap(): Promise<void> {
       getSelectedUC,
       queueAddUC,
       queueMutationsUC,
+      resetUC,
     );
 
     const createTask = scheduler.every(Number(process.env.ADD_ELEMENTS_SCHEDULE) || 10_000, () => {
