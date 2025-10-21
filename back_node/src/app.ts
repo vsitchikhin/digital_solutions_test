@@ -20,6 +20,7 @@ import { InMemoryMutationBuffer } from '@/infrastructure/queue/mutation.buffer';
 import { IntervalScheduler } from '@/infrastructure/schedulers/interval.scheduler';
 import { ApplyCreateBatchInteractor } from '@/application/usecases/apply-create-batch.interactor';
 import { ApplyMutationBatchInteractor } from '@/application/usecases/apply-mutation-batch.interactor';
+import { SelectionOrderService } from '@/domain/selection/selection-order.service';
 
 export default async function bootstrap(): Promise<void> {
   try {
@@ -43,8 +44,10 @@ export default async function bootstrap(): Promise<void> {
       flush: () => ({ select: [], unselect: [] }),
     });
 
+    const selectionOrderService = new SelectionOrderService();
+
     const applyCreateUC = new ApplyCreateBatchInteractor(createBuffer, universeRepo);
-    const applyMutationUC = new ApplyMutationBatchInteractor(mutationBuffer, selectionRepo);
+    const applyMutationUC = new ApplyMutationBatchInteractor(mutationBuffer, selectionRepo, selectionOrderService);
 
     const scheduler = new IntervalScheduler();
 
