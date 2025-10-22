@@ -15,7 +15,8 @@
     "quasar": "^2.18.5",
     "sass": "^1.93.2",
     "vue": "^3.5.22",
-    "vue-router": "^4.6.3"
+    "vue-router": "^4.6.3",
+    "vuedraggable": "^2.24.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",

@@ -1,11 +1,8 @@
 import type { Request, Response } from 'express';
+import type { GetEntitiesListRequest, GetSelectedEntitiesRequest } from '@/application/dto/entities.dto';
 import type {
-  GetEntitiesListRequest,
-  GetSelectedEntitiesRequest,
-} from '@/application/dto/entities.dto';
-import type {
-  QueueAddItemsRequest,
   QueueAddItemsEnqueueResponse,
+  QueueAddItemsRequest,
   QueueMutationsRequest,
   QueueMutationsResponse,
 } from '@/application/dto/mutations.dto';
@@ -13,11 +10,9 @@ import { type GetEntitiesListInteractor } from '@/application/usecases/get-entit
 import { type GetSelectedEntitiesInteractor } from '@/application/usecases/get-selected-entities.interactor';
 import { type QueueAddItemsInteractor } from '@/application/usecases/queue-add-items.interactor';
 import { type QueueMutationsInteractor } from '@/application/usecases/queue-mutations.interactor';
-import {
-  BadRequestError,
-  InternalServerError,
-} from '@/infrastructure/http/errors/http.errors';
+import { BadRequestError, InternalServerError } from '@/infrastructure/http/errors/http.errors';
 import { type ResetSelectionsInteractor } from '@/application/usecases/reset-selections.interactor';
+import { type Cursor } from '@/application/types/primitives';
 
 export class EntitiesHandler {
   private MAX_LIMIT = Number(process.env.MAX_ENTITIES_LIMIT) || 100;
@@ -43,11 +38,10 @@ export class EntitiesHandler {
       const result = this.getListUC.execute(dto);
       res.json(result);
     } catch (err: unknown) {
-      const error = this.asInternalServerError(err, {
+      throw this.asInternalServerError(err, {
         route: '/api/entities/list',
         query: req.query,
       });
-      throw error;
     }
   };
 
@@ -64,11 +58,10 @@ export class EntitiesHandler {
       const result = this.getSelectedUC.execute(dto);
       res.json(result);
     } catch (err: unknown) {
-      const error = this.asInternalServerError(err, {
+      throw this.asInternalServerError(err, {
         route: '/api/entities/selected',
         query: req.query,
       });
-      throw error;
     }
   };
 
@@ -89,11 +82,10 @@ export class EntitiesHandler {
       const result: QueueAddItemsEnqueueResponse = this.queueAddUC.execute(body);
       res.json(result);
     } catch (err: unknown) {
-      const error = this.asInternalServerError(err, {
+      throw this.asInternalServerError(err, {
         route: '/api/entities/queue/create',
         body: req.body,
       });
-      throw error;
     }
   };
 
@@ -139,11 +131,10 @@ export class EntitiesHandler {
       const result: QueueMutationsResponse = this.queueMutationsUC.execute(body);
       res.json(result);
     } catch (err: unknown) {
-      const error = this.asInternalServerError(err, {
+      throw this.asInternalServerError(err, {
         route: '/api/entities/queue/mutate',
         body: req.body,
       });
-      throw error;
     }
   };
 
@@ -152,10 +143,9 @@ export class EntitiesHandler {
       const result = this.resetUC.execute();
       res.json(result);
     } catch(err: unknown) {
-      const error = this.asInternalServerError(err, {
+      throw this.asInternalServerError(err, {
         route: '/api/entities/reset',
       });
-      throw error;
     }
   };
 
@@ -180,7 +170,7 @@ export class EntitiesHandler {
     throw new BadRequestError(`Query "${fieldName}" must be a number`, { value });
   }
 
-  private validatePaging(limit?: number, cursor?: number, context?: unknown): void {
+  private validatePaging(limit?: number, cursor?: Cursor, context?: unknown): void {
     if (typeof limit !== 'undefined') {
       if (!Number.isInteger(limit) || limit <= 0 || limit > this.MAX_LIMIT) {
         throw new BadRequestError(`"limit" must be an integer in range [1..${this.MAX_LIMIT}]`, { limit, ...context as object });
