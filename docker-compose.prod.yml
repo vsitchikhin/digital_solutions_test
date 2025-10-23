@@ -2,7 +2,7 @@ services:
   back:
     container_name: digital_solutions-back
     build:
-      context: ./digital_solutions/back_node
+      context: ./back_node
       dockerfile: Dockerfile
     environment:
       - PORT=4000
@@ -29,7 +29,7 @@ services:
   front:
     container_name: digital_solutions-front
     build:
-      context: ./digital_solutions/front_vue
+      context: ./front_vue
       dockerfile: Dockerfile
     environment:
       - PORT=80
