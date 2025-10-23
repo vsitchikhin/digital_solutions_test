@@ -5,7 +5,6 @@ services:
       context: ./digital_solutions/back_node
       dockerfile: Dockerfile
     environment:
-      # backend env
       - PORT=4000
       - NODE_ENV=production
       - DEFAULT_ENTITIES_LIMIT=20
@@ -17,7 +16,7 @@ services:
       - UPDATE_ELEMENTS_SCHEDULE=1000
       - CHUNK_SIZE=10000
     expose:
-      - "4000" # только внутри сети
+      - "4000"
     volumes:
       - back_logs:/app/logs
     restart: unless-stopped
@@ -33,9 +32,8 @@ services:
       context: ./digital_solutions/front_vue
       dockerfile: Dockerfile
     environment:
-      # фронт внутри образа уже имеет ENV, но пусть будут для явности
       - PORT=80
-      - BASE_URL=/api          # фронту больше не нужен хост, он ходит на /api
+      - BASE_URL=/api
       - DEFAULT_LIMIT=20
       - MAX_LIMIT=100
     depends_on:
