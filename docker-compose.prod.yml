@@ -1,0 +1,49 @@
+services:
+  back:
+    container_name: digital_solutions-back
+    build:
+      context: ./digital_solutions/back_node
+      dockerfile: Dockerfile
+    environment:
+      # backend env
+      - PORT=4000
+      - NODE_ENV=production
+      - DEFAULT_ENTITIES_LIMIT=20
+      - MAX_ENTITIES_LIMIT=100
+      - UNIVERSE_MAX_ID=1000000
+      - HEADER_REQUEST_ID=x-request-id
+      - HEADER_CORRELATION_ID=x-correlation-id
+      - ADD_ELEMENTS_SCHEDULE=10000
+      - UPDATE_ELEMENTS_SCHEDULE=1000
+      - CHUNK_SIZE=10000
+    expose:
+      - "4000" # только внутри сети
+    volumes:
+      - back_logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:4000/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+
+  front:
+    container_name: digital_solutions-front
+    build:
+      context: ./digital_solutions/front_vue
+      dockerfile: Dockerfile
+    environment:
+      # фронт внутри образа уже имеет ENV, но пусть будут для явности
+      - PORT=80
+      - BASE_URL=/api          # фронту больше не нужен хост, он ходит на /api
+      - DEFAULT_LIMIT=20
+      - MAX_LIMIT=100
+    depends_on:
+      back:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+volumes:
+  back_logs:
