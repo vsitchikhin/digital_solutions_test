@@ -22,5 +22,12 @@ export default defineConfig(({ mode }) => {
     resolve: { alias: { '@': path.resolve(__dirname, './src') } },
     server: { port: Number(env.PORT) || 3000, strictPort: true },
     preview: { port: Number(env.PORT) || 3000, strictPort: true },
+    define: {
+      __APP_CONFIG__: {
+        BASE_URL: JSON.stringify(env.BASE_URL || 'http://localhost:4000'),
+        DEFAULT_LIMIT: Number(env.DEFAULT_LIMIT || 20),
+        MAX_LIMIT: Number(env.MAX_LIMIT || 100),
+      },
+    },
   };
 });

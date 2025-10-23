@@ -3,6 +3,7 @@ import { safeJSON } from '@/shared/lib/io';
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const url = buildUrl(path);
+  console.log('request url ----------- ', url);
 
   const headers = new Headers(init?.headers);
   if (init?.body !== null && !headers.has('Content-Type')) {
@@ -35,7 +36,10 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 function buildUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path;
 
-  const base = (config.apiUrl || '').replace(/\/+$/, '');
+  console.log('api url ---------- ', config.apiUrl);
+  const base = (config.apiUrl || '')
+    .replace(/^['"]|['"]$/g, '')
+    .replace(/\/+$/, '');
   const p = path.replace(/^\/+/, '');
-  return base ? `${base}/${path}` : `/${p}`;
+  return base ? `${base}/${p}` : `/${p}`;
 }

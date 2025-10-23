@@ -1,16 +1,15 @@
 <template>
-  <q-alert
+  <q-banner
     v-if="message"
     dense
-    color="negative"
-    text-color="white"
-    icon="error"
-    class="q-mb-md"
-    :model-value="visible"
-    @update:model-value="onClose"
+    class="q-mb-md bg-negative text-white"
+    inline-actions
   >
-    {{ message }}
-  </q-alert>
+    <div class="ellipsis">{{ message }}</div>
+    <template #action>
+      <q-btn flat dense label="Закрыть" @click="onClose" />
+    </template>
+  </q-banner>
 </template>
 
 <script lang="ts">

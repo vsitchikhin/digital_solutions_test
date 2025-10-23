@@ -97,23 +97,26 @@ export const useEntityStore = defineStore('entity', {
       this.loading.mutate = true;
       this.clearError();
 
-      const snap: {
-        unselected: EntityId[];
-        selected: EntityId[];
-        unselectedCursor: EntityId | null;
-        selectedCursor: EntityId | null;
-      } = {
+      const snap = {
         unselected: [...this.unselected],
         selected: [...this.selected],
-        unselectedCursor: this.unselectedCursor || null,
-        selectedCursor: this.selectedCursor || null,
+        unselectedCursor: this.unselectedCursor,
+        selectedCursor: this.selectedCursor,
       };
 
       try {
+        const normReorder = toQueueReorder(payload.reorder);
+
         if (Array.isArray(payload.select) && payload.select.length) {
-          for (const id of payload.select) {
+          const selectIds = payload.select;
+          for (const id of selectIds) {
             this.unselected = this.unselected.filter(x => x !== id);
-            if (!this.selected.includes(id)) this.selected = [...this.selected, id];
+
+            if (normReorder && normReorder.movedId === id) {
+              this.selected = insertWithAnchor(this.selected, id, normReorder.beforeId, normReorder.afterId);
+            } else {
+              if (!this.selected.includes(id)) this.selected = [...this.selected, id];
+            }
           }
         }
 
@@ -124,16 +127,16 @@ export const useEntityStore = defineStore('entity', {
           }
         }
 
-        if (payload.reorder) {
-          const { movedId, beforeId, afterId } = payload.reorder;
+        if (normReorder && !(payload.select?.includes(normReorder.movedId ?? -1))) {
+          const { movedId, beforeId, afterId } = normReorder;
           this.selected = reorderInList(this.selected, movedId, beforeId, afterId);
         }
 
-        await entitiesApi.queueMutate(payload);
-
-        this.selected = [];
-        this.selectedCursor = null;
-        await this.loadSelected({ limit: getDefaultLimit() ?? 20 });
+        await entitiesApi.queueMutate({
+          select: payload.select,
+          unselect: payload.unselect,
+          reorder: normReorder,
+        });
       } catch (e) {
         this.unselected = snap.unselected;
         this.selected = snap.selected;
@@ -210,4 +213,31 @@ function reorderInList(
 
   next.splice(Math.min(idx, next.length), 0, movedId);
   return next;
+}
+
+function insertWithAnchor(list: EntityId[], id: EntityId, beforeId?: EntityId, afterId?: EntityId): EntityId[] {
+  const without = list.filter(x => x !== id);
+  if (typeof beforeId === 'number') {
+    const idx = without.indexOf(beforeId);
+    const insertAt = idx >= 0 ? idx + 1 : without.length;
+    const next = [...without];
+    next.splice(insertAt, 0, id);
+    return next;
+  }
+  if (typeof afterId === 'number') {
+    const idx = without.indexOf(afterId);
+    const insertAt = Math.max(0, idx);
+    const next = [...without];
+    next.splice(insertAt, 0, id);
+    return next;
+  }
+  return [...without, id];
+}
+
+function toQueueReorder(params?: ReorderPayload): ReorderPayload | undefined {
+  if (!params) return undefined;
+  const out: { movedId: EntityId; beforeId?: EntityId; afterId?: EntityId } = { movedId: params.movedId };
+  if (typeof params.beforeId === 'number') out.beforeId = params.beforeId;
+  else if (typeof params.afterId === 'number') out.afterId = params.afterId;
+  return out;
 }

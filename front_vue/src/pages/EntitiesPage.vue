@@ -1,45 +1,50 @@
 <template>
-  <q-page class="q-pa-md">
-    <q-linear-progress
-      v-show="busy"
-      indeterminate
-      color="primary"
-      class="q-mb-md"
-      style="height: 3px;"
-    />
+  <q-page-container>
+    <q-page class="q-pa-md">
+      <q-linear-progress
+        v-show="busy"
+        indeterminate
+        color="primary"
+        class="q-mb-md"
+        style="height: 3px;"
+      />
 
-    <error-banner v-if="errorMessage" :message="errorMessage" @close="onErrorClose" />
+      <error-banner v-if="errorMessage" :message="errorMessage" @close="onErrorClose" />
 
-    <toolbar-card
-      class="q-mb-md"
-      :busy="busy"
-      @reset="onReset"
-      @refresh="onRefresh"
-      @search="onSearch"
-    />
+      <toolbar-card
+        class="q-mb-md"
+        :busy="busy"
+        @reset="onReset"
+        @refresh="onRefresh"
+        @search="onSearch"
+      />
 
-    <div class="row q-col-gutter-lg">
-      <div class="col-12 col-md-6">
-        <entities-list
-          :items="unselectedItems"
-          :loading="unselectedLoading"
-          :has-more="unselectedHasMore"
-          @select="onSelect"
-          @load-more="onLoadMoreUnselected"
-          @reorder="onReorderUnselected"
-        />
+      <div class="row q-col-gutter-lg">
+        <div class="col-12 col-md-6">
+          <entities-list
+            :items="unselectedItems"
+            :loading="unselectedLoading"
+            :has-more="unselectedHasMore"
+            @select="onSelect"
+            @unselect="onUnselect"
+            @load-more="onLoadMoreUnselected"
+            @reorder="onReorderUnselected"
+          />
+        </div>
+
+        <div class="col-12 col-md-6">
+          <selected-list
+            :items="selectedItems"
+            :loading="selectedLoading"
+            @select="onSelect"
+            @unselect="onUnselect"
+            @reorder="onReorder"
+            @cross-drop="onCrossDrop"
+          />
+        </div>
       </div>
-
-      <div class="col-12 col-md-6">
-        <selected-list
-          :items="selectedItems"
-          :loading="selectedLoading"
-          @unselect="onUnselect"
-          @reorder="onReorder"
-        />
-      </div>
-    </div>
-  </q-page>
+    </q-page>
+  </q-page-container>
 </template>
 
 <script lang="ts">
@@ -79,6 +84,17 @@ export default defineComponent({
 
     function onReorder(params: ReorderPayload) {
       sendReorder(params);
+    }
+
+    function onCrossDrop(params: ReorderPayload) {
+      const { movedId, beforeId, afterId } = params;
+      void entitiesStore.enqueueMutations({
+        select: [movedId],
+        reorder:
+          typeof beforeId === 'number' ? { movedId, beforeId }
+            : typeof afterId  === 'number' ? { movedId, afterId }
+              : { movedId },
+      });
     }
 
     const onReorderUnselected = (params: ReorderPayload) => {
@@ -128,6 +144,7 @@ export default defineComponent({
       onRefresh,
       onReorder,
       onReorderUnselected,
+      onCrossDrop,
 
       unselectedItems,
       unselectedLoading,

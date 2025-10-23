@@ -39,7 +39,7 @@ services:
     restart: unless-stopped
   front:
     build:
-      context: ./digital_solutions/front_vue
+      context: ./front_vue
       dockerfile: Dockerfile
     environment:
       - PORT=3000

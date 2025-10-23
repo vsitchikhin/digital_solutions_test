@@ -1,6 +1,6 @@
 <template>
   <q-card>
-    <q-card-section class="text-h6">
+    <q-card-section class="text-h6 text-dark">
       Выбранные
     </q-card-section>
     <q-separator />
@@ -11,16 +11,18 @@
         <draggable
           v-model="list"
           :item-key="getKey"
-          handle=".drag-handle"
           :disabled="loading"
+          :group="{ name: 'entities', pull: true, put: true }"
+          :animation="150"
+          :force-fallback="true"
           @end="onEnd"
+          @change="onChange"
         >
           <template #item="{ element: id }">
-            <q-item :key="`sel-${id}`" dense>
-              <q-item-section side>
-                <q-icon name="drag_indicator" class="drag-handle cursor-pointer q-pr-sm" />
+            <q-item :key="`sel-${id}`" dense :class="loading ? 'disabled' : ''">
+              <q-item-section class="text-dark">
+                {{ id }}
               </q-item-section>
-              <q-item-section>{{ id }}</q-item-section>
               <q-item-section side>
                 <q-btn
                   size="sm"
@@ -44,7 +46,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, type PropType, ref, watch } from 'vue';
+import { defineComponent, nextTick, type PropType, ref, watch } from 'vue';
 import type { EntityId } from '@/shared/types/primitives';
 import draggable from 'vuedraggable';
 import type { ReorderPayload } from '@/entities/entity/model/dto';
@@ -64,9 +66,12 @@ export default defineComponent({
   },
 
   emits: {
+    select: (id: EntityId) => Number.isInteger(id) && id > 0,
     unselect: (id: EntityId) => Number.isInteger(id) && id > 0,
     reorder: (params: ReorderPayload) =>
       Number.isInteger(params.movedId) && params.movedId > 0,
+    'cross-drop': (params: ReorderPayload) =>
+      Number.isInteger(params?.movedId) && params.movedId > 0,
   },
 
   setup(props, { emit }) {
@@ -87,16 +92,42 @@ export default defineComponent({
     }
 
     function onEnd(event: any) {
-      const newIndex: EntityId = event?.newIndex;
-      if (typeof newIndex !== 'number' || newIndex < 0 || newIndex >= list.value.length) return;
+      if (props.loading) return;
+      if (event?.from !== event?.to) return;
 
-      const movedId: EntityId = list.value[newIndex] as EntityId;
-      const beforeId: EntityId | undefined = newIndex > 0 ? list.value[newIndex - 1] : undefined;
-      const afterId: EntityId | undefined = newIndex < list.value.length - 1 ? list.value[newIndex + 1] : undefined;
+      const newIndex = Number(event?.newIndex);
+      if (!Number.isInteger(newIndex) || newIndex < 0 || newIndex >= list.value.length) return;
 
-      emit('reorder', { movedId, beforeId, afterId });
+      const movedId = list.value[newIndex] as EntityId;
+      const beforeId = newIndex > 0 ? (list.value[newIndex - 1] as EntityId) : undefined;
+      const afterId  = newIndex < list.value.length - 1 ? (list.value[newIndex + 1] as EntityId) : undefined;
+
+      const payload: ReorderPayload =
+        typeof beforeId === 'number' ? { movedId, beforeId }
+          : typeof afterId  === 'number' ? { movedId, afterId }
+            : { movedId };
+
+      emit('reorder', payload);
     }
 
+    async function onChange(event: any) {
+      if (event?.added && typeof event.added.element === 'number') {
+        await nextTick();
+
+        const nextIndex = Number(event.added.newIndex);
+        const id = event.added.element as EntityId;
+
+        const beforeId = nextIndex > 0 ? (list.value[nextIndex - 1] as EntityId) : undefined;
+        const afterId  = nextIndex < list.value.length - 1 ? (list.value[nextIndex + 1] as EntityId) : undefined;
+
+        const payload: ReorderPayload =
+          typeof beforeId === 'number' ? { movedId: id, beforeId }
+            : typeof afterId  === 'number' ? { movedId: id, afterId }
+              : { movedId: id };
+
+        emit('cross-drop', payload);
+      }
+    }
 
     return {
       list,
@@ -104,11 +135,16 @@ export default defineComponent({
       getKey,
       onUnselect,
       onEnd,
+
+      onChange,
     };
   },
 });
 </script>
 
-<style scoped>
-.disabled { opacity: 0.6; pointer-events: none; }
+<style scoped lang="scss">
+.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
 </style>

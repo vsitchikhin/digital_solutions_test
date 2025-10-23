@@ -20,9 +20,9 @@ export type ReorderPayload = {
 }
 
 export type QueueMutateBody = {
-  select?: EntityId[];
-  unselect?: EntityId[];
-  reorder?: ReorderPayload;
+  select?: EntityId[] | undefined;
+  unselect?: EntityId[] | undefined;
+  reorder?: ReorderPayload | undefined;
 }
 
 export type ListResponse = SharedListResponse;
