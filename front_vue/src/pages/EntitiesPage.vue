@@ -1,50 +1,48 @@
 <template>
-  <q-page-container>
-    <q-page class="q-pa-md">
-      <q-linear-progress
-        v-show="busy"
-        indeterminate
-        color="primary"
-        class="q-mb-md"
-        style="height: 3px;"
-      />
+  <q-page class="q-pa-md">
+    <q-linear-progress
+      v-show="busy"
+      indeterminate
+      color="primary"
+      class="q-mb-md"
+      style="height: 3px;"
+    />
 
-      <error-banner v-if="errorMessage" :message="errorMessage" @close="onErrorClose" />
+    <error-banner v-if="errorMessage" :message="errorMessage" @close="onErrorClose" />
 
-      <toolbar-card
-        class="q-mb-md"
-        :busy="busy"
-        @reset="onReset"
-        @refresh="onRefresh"
-        @search="onSearch"
-      />
+    <toolbar-card
+      class="q-mb-md"
+      :busy="busy"
+      @reset="onReset"
+      @refresh="onRefresh"
+      @search="onSearch"
+    />
 
-      <div class="row q-col-gutter-lg">
-        <div class="col-12 col-md-6">
-          <entities-list
-            :items="unselectedItems"
-            :loading="unselectedLoading"
-            :has-more="unselectedHasMore"
-            @select="onSelect"
-            @unselect="onUnselect"
-            @load-more="onLoadMoreUnselected"
-            @reorder="onReorderUnselected"
-          />
-        </div>
-
-        <div class="col-12 col-md-6">
-          <selected-list
-            :items="selectedItems"
-            :loading="selectedLoading"
-            @select="onSelect"
-            @unselect="onUnselect"
-            @reorder="onReorder"
-            @cross-drop="onCrossDrop"
-          />
-        </div>
+    <div class="row q-col-gutter-lg">
+      <div class="col-12 col-md-6">
+        <entities-list
+          :items="unselectedItems"
+          :loading="unselectedLoading"
+          :has-more="unselectedHasMore"
+          @select="onSelect"
+          @unselect="onUnselect"
+          @load-more="onLoadMoreUnselected"
+          @reorder="onReorderUnselected"
+        />
       </div>
-    </q-page>
-  </q-page-container>
+
+      <div class="col-12 col-md-6">
+        <selected-list
+          :items="selectedItems"
+          :loading="selectedLoading"
+          @select="onSelect"
+          @unselect="onUnselect"
+          @reorder="onReorder"
+          @cross-drop="onCrossDrop"
+        />
+      </div>
+    </div>
+  </q-page>
 </template>
 
 <script lang="ts">
