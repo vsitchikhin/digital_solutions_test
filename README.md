@@ -55,9 +55,9 @@
     ```
    PORT=3000
 
-    BASE_URL='http://localhost:4000'
-    DEFAULT_LIMIT=20
-    MAX_LIMIT=100
+   VITE_BASE_URL='http://localhost:4000'
+   VITE_DEFAULT_LIMIT=20
+   VITE_MAX_LIMIT=100
    ```
 4. Если необходимо запустить в dev режиме: `npm run dev` (находясь в директории фронта/бэка)
 5. Если необходимо запустить в прод режиме: `npm run build` -> `npm run start` (только сервер)
